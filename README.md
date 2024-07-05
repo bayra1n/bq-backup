@@ -1,2 +1,101 @@
-# bq-backup
-Backup Big Query into GCS
+```markdown
+# BigQuery Backup Script
+
+This script automates the backup of BigQuery datasets to Google Cloud Storage (GCS) and sends notifications to Discord and Google Workspace using webhooks.
+
+## Features
+
+* **Multi-Project Support:** Back up datasets from multiple Google Cloud projects listed in a text file.
+* **GCS Storage:** Stores backups in your specified GCS bucket.
+* **Retention Policy:**  Configurable retention period to automatically delete old backups.
+* **Discord Notifications:** Sends success/failure notifications to a Discord channel via webhook.
+* **Tagging:**  Allows you to mention specific users or roles in Discord notifications.
+* **Google Workspace Notifications:**  (Optional) Sends notifications to Google Workspace channels.
+
+## Installation
+
+1. **Install the Google Cloud SDK:** Follow the instructions at [Install the gcloud CLI](https://cloud.google.com/sdk/docs/install) to set up the Google Cloud command-line tools.
+
+2. **Clone Repository:**  Clone this repository to your server or local machine.
+3. **Permissions:** Ensure the account running the script has the necessary permissions in Google Cloud to access BigQuery and GCS.
+4. **Dependencies:**  Install the required dependencies:
+
+   ```bash
+   pip install google-cloud-bigquery google-cloud-storage google-auth-httplib2 requests
+   ```
+   
+## Configuration
+
+1. **Create Backup Directory:**
+
+   ```bash
+   sudo mkdir -p /var/log/bq-backup/
+   sudo chown $USER /var/log/bq-backup/
+   ```
+   
+2. **Prepare Project File (`projects.txt`):**
+
+    * Create a text file named `projects.txt` in the same directory as the script.
+    * List each Google Cloud project ID on a separate line.
+
+    ```
+    your-project-id-1
+    your-project-id-2
+    your-project-id-3
+    ```
+3. **Export ENV File:**
+    ```bash
+    export DISCORD="[YOUR_DISCORD_WEBHOOK_URL]"
+    export TAG="[USERID_1],[USERID_2],..."
+    export GWS="[YOUR_GOOGLE_WORKSPACE_WEBHOOK_URL]"
+    export GCS="[YOUR_GCS_BUCKET_NAME]"
+
+    ```
+
+## Usage
+
+```bash
+sudo ./bq-backup -f projects.txt --bucket=$GCS --retention=30 --webhook=$DISCORD --tagid=$TAG --workspace=$GWS
+```
+
+* **`-f`:** Path to the project file (defaults to `projects.txt`).
+* **`--bucket`:** Name of your GCS bucket.
+* **`--retention`:** Number of days to retain backups (default is 7).
+* **`--webhook`:** Discord webhook URL.
+* **`--tagid`:** Comma-separated list of Discord tag IDs (e.g., `@user1,@role2`).
+* **`--workspace`:** Google Workspace webhook URL (optional).
+
+## Example: `projects.txt`
+
+```
+dto-mi-stg
+dto-kk-stg
+dto-data-stg
+```
+
+**How it works:**
+
+- This example will back up all datasets from these 3 projects to your GCS bucket, retain backups for 30 days, and send notifications to your specified Discord channel and Google Workspace webhook URL.
+
+## Contributing
+
+Contributions are welcome! Feel free to open issues or submit pull requests.
+
+## License
+
+This script is licensed under the [MIT License](LICENSE).
+```
+
+
+
+**How to Create the `README.md` File:**
+
+1. **Create a New File:**
+    - In the same directory as your `bq-backup` script, create a new text file.
+    - Name it `README.md`. (The `.md` extension indicates it's a Markdown file.)
+2. **Copy and Paste:** 
+    - Copy the content above and paste it into your newly created `README.md` file.
+3. **Save the File:**
+    - Save the changes to your `README.md` file.
+
+Now you have a clear and informative `README.md` file that explains how to use your BigQuery backup script!
