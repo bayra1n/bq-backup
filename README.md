@@ -67,9 +67,9 @@ sudo ./bq-backup -f projects.txt --bucket=$GCS --retention=30 --webhook=$DISCORD
 ## Example: `projects.txt`
 
 ```
-dto-mi-stg
-dto-kk-stg
-dto-data-stg
+project-1-stg
+project-2-stg
+project-3-stg
 ```
 
 **How it works:**
@@ -84,17 +84,3 @@ Contributions are welcome! Feel free to open issues or submit pull requests.
 
 This script is licensed under the [MIT License](LICENSE).
 ```
-
-
-
-**How to Create the `README.md` File:**
-
-1. **Create a New File:**
-    - In the same directory as your `bq-backup` script, create a new text file.
-    - Name it `README.md`. (The `.md` extension indicates it's a Markdown file.)
-2. **Copy and Paste:** 
-    - Copy the content above and paste it into your newly created `README.md` file.
-3. **Save the File:**
-    - Save the changes to your `README.md` file.
-
-Now you have a clear and informative `README.md` file that explains how to use your BigQuery backup script!
