@@ -53,7 +53,7 @@ sudo ./bq-backup -f projects.txt --bucket=$GCS --retention=30 --webhook=$DISCORD
 ## Usage
 
 ```bash
-sudo ./bq-backup -f projects.txt --bucket=$GCS --retention=30
+sudo ./bq-backup --bucket=$GCS --retention=30
 ```
 
 * **`-f`:** Path to the project file (defaults to `projects.txt`).
