@@ -38,7 +38,7 @@ This script automates the backup of BigQuery datasets to Google Cloud Storage (G
 3. **Export ENV File:**
     ```bash
     export DISCORD="[YOUR_DISCORD_WEBHOOK_URL]"
-    export TAG="[USERID_1],[USERID_2],..."
+    export TAG="[USERID_1],[ROLEID_1],..."
     export GWS="[YOUR_GOOGLE_WORKSPACE_WEBHOOK_URL]"
     export GCS="[YOUR_GCS_BUCKET_NAME]"
 
