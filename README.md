@@ -1,4 +1,3 @@
-```markdown
 # BigQuery Backup Script
 
 This script automates the backup of BigQuery datasets to Google Cloud Storage (GCS) and sends notifications to Discord and Google Workspace using webhooks.
