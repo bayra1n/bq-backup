@@ -51,10 +51,16 @@ This script automates the backup of BigQuery datasets to Google Cloud Storage (G
 
     ```
 
-## Usage
+## Full Usage
 
 ```bash
 sudo ./bq-backup -f projects.txt --bucket=$GCS --retention=30 --webhook=$DISCORD --tagid=$TAG --workspace=$GWS
+```
+
+## Usage
+
+```bash
+sudo ./bq-backup -f projects.txt --bucket=$GCS --retention=30
 ```
 
 * **`-f`:** Path to the project file (defaults to `projects.txt`).
@@ -63,14 +69,6 @@ sudo ./bq-backup -f projects.txt --bucket=$GCS --retention=30 --webhook=$DISCORD
 * **`--webhook`:** Discord webhook URL.
 * **`--tagid`:** Comma-separated list of Discord tag IDs (e.g., `@user1,@role2`).
 * **`--workspace`:** Google Workspace webhook URL (optional).
-
-## Example: `projects.txt`
-
-```
-project-1-stg
-project-2-stg
-project-3-stg
-```
 
 **How it works:**
 
@@ -83,4 +81,3 @@ Contributions are welcome! Feel free to open issues or submit pull requests.
 ## License
 
 This script is licensed under the [MIT License](LICENSE).
-```
