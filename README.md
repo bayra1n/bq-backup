@@ -14,15 +14,8 @@ This script automates the backup of BigQuery datasets to Google Cloud Storage (G
 ## Installation
 
 1. **Install the Google Cloud SDK:** Follow the instructions at [Install the gcloud CLI](https://cloud.google.com/sdk/docs/install) to set up the Google Cloud command-line tools.
+2. **Permissions:** Ensure the account running the script has the necessary permissions in Google Cloud to access BigQuery and GCS.
 
-2. **Clone Repository:**  Clone this repository to your server or local machine.
-3. **Permissions:** Ensure the account running the script has the necessary permissions in Google Cloud to access BigQuery and GCS.
-4. **Dependencies:**  Install the required dependencies:
-
-   ```bash
-   pip install google-cloud-bigquery google-cloud-storage google-auth-httplib2 requests
-   ```
-   
 ## Configuration
 
 1. **Create Backup Directory:**
