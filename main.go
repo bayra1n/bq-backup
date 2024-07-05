@@ -180,7 +180,7 @@ func backupDataset(ctx context.Context, client *bigquery.Client, storageClient *
 		table := dataset.Table(tableID)
 		meta, err := table.Metadata(ctx)
 		if err != nil {
-			logStatus(today, projectID, datasetID, tableID, "❌", fmt.Sprintf("Failed to get metadata: %v", err))
+			logStatus(today, projectID, datasetID, tableID, "Failed", fmt.Sprintf("Failed to get metadata: %v", err))
 			continue
 		}
 
