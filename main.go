@@ -35,7 +35,8 @@ const (
 var webhookURL string
 var workspaceWebhookURL string
 var tagIDs []string
-var messageBuffer []string
+var workspaceMessageBuffer []string
+var discordMessageBuffer []string
 
 func main() {
 	projectFile := flag.String("f", defaultProjectFile, "File containing list of project IDs")
@@ -115,10 +116,18 @@ func main() {
 
 		// Clean up old backups
 		cleanupOldBackups(ctx, storageClient, *bucketName, projectID, *retentionDays)
-	}
-	// Send Google Workspace Chat notification if webhook URL is provided
-	if workspaceWebhookURL != "" {
-		sendWorkspaceNotification()
+
+		// Send notifications after each project's backup is completed
+		if workspaceWebhookURL != "" {
+			sendWorkspaceNotification(projectID)
+		}
+		if webhookURL != "" {
+			sendDiscordNotification(projectID)
+		}
+
+		// Clear the message buffers for the next project
+		workspaceMessageBuffer = nil
+		discordMessageBuffer = nil
 	}
 }
 
@@ -171,7 +180,7 @@ func backupDataset(ctx context.Context, client *bigquery.Client, storageClient *
 		table := dataset.Table(tableID)
 		meta, err := table.Metadata(ctx)
 		if err != nil {
-			logStatus(today, projectID, datasetID, tableID, "Failed", fmt.Sprintf("Failed to get metadata: %v", err))
+			logStatus(today, projectID, datasetID, tableID, "❌", fmt.Sprintf("Failed to get metadata: %v", err))
 			continue
 		}
 
@@ -180,24 +189,24 @@ func backupDataset(ctx context.Context, client *bigquery.Client, storageClient *
 			tempTableID := fmt.Sprintf("%s_temp_%d", tableID, time.Now().Unix())
 			tempTable := dataset.Table(tempTableID)
 			if err := createTempTable(ctx, client, tempTable, tableID); err != nil {
-				logStatus(today, projectID, datasetID, tableID, "Failed", fmt.Sprintf("Failed to create temporary table: %v", err))
+				logStatus(today, projectID, datasetID, tableID, "❌", fmt.Sprintf("Failed to create temporary table: %v", err))
 				continue
 			}
 			if err := backupTable(ctx, tempTable, storageClient, bucketName, projectID, today, datasetID, tableID); err != nil {
-				logStatus(today, projectID, datasetID, tableID, "Failed", fmt.Sprintf("Failed to back up table: %v", err))
+				logStatus(today, projectID, datasetID, tableID, "❌", fmt.Sprintf("Failed to back up table: %v", err))
 				_ = tempTable.Delete(ctx)
 				continue
 			}
 			if err := tempTable.Delete(ctx); err != nil {
 				fmt.Printf("Failed to delete temporary table %s: %v\n", tempTableID, err)
 			}
-			logStatus(today, projectID, datasetID, tableID, "Complete", "")
+			logStatus(today, projectID, datasetID, tableID, "✅", "")
 		} else {
 			if err := backupTable(ctx, table, storageClient, bucketName, projectID, today, datasetID, tableID); err != nil {
-				logStatus(today, projectID, datasetID, tableID, "Failed", fmt.Sprintf("Failed to back up table: %v", err))
+				logStatus(today, projectID, datasetID, tableID, "❌", fmt.Sprintf("Failed to back up table: %v", err))
 				continue
 			}
-			logStatus(today, projectID, datasetID, tableID, "Complete", "")
+			logStatus(today, projectID, datasetID, tableID, "✅", "")
 		}
 	}
 }
@@ -316,19 +325,18 @@ func logStatus(date, projectID, datasetID, tableID, status, reason string) {
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
+	if reason == "" {
+		reason = "no issue"
+	}
+
 	logEntry := []string{date, projectID, datasetID, tableID, status, reason}
 	if err := writer.Write(logEntry); err != nil {
 		fmt.Printf("Failed to write log entry: %v\n", err)
 	}
 
-	// Send notification to Discord if webhook URL is provided
-	if webhookURL != "" {
-		message := fmt.Sprintf("**%s** [`%s`] > %s < - **%s** | Reason: %s", projectID, datasetID, tableID, status, reason)
-		sendDiscordNotification(message)
-	}
-
-	// Append message to buffer for Google Workspace Chat notification
-	messageBuffer = append(messageBuffer, fmt.Sprintf("| *%s* | `%s` | `%s` | `%s` |", projectID, datasetID, status, reason))
+	// Append message to buffers for notifications
+	workspaceMessageBuffer = append(workspaceMessageBuffer, fmt.Sprintf("| `%s` | `%s` | `%s` | `%s` |", datasetID, tableID, status, reason))
+	discordMessageBuffer = append(discordMessageBuffer, fmt.Sprintf("* **%s** (`%s`) - %s > %s", datasetID, tableID, status, reason))
 }
 
 func manageLogFileSize(filePath string) error {
@@ -408,13 +416,14 @@ func generateZipFileName() string {
 	}
 }
 
-func sendWorkspaceNotification() {
+func sendWorkspaceNotification(projectID string) {
 	message := "*Backup Daily Big Query " + time.Now().Format("2006-01-02") + "*\n"
-	message += "*| `Project` | `Dataset` | `Status` | `Reason` |*\n"
-	message += "|-----------------------------------------------------------|\n"
-	for _, line := range messageBuffer {
+	message += "*| `Dataset` | `Table` | `Status` | `Reason` |*\n"
+	message += "|---------------------------------------------\n"
+	for _, line := range workspaceMessageBuffer {
 		message += line + "\n"
 	}
+	message += fmt.Sprintf("-------------| *Project : %s*\n", projectID)
 
 	workspaceMessage := map[string]string{"text": message}
 	workspaceMessageJSON, err := json.Marshal(workspaceMessage)
@@ -435,24 +444,22 @@ func sendWorkspaceNotification() {
 	}
 }
 
-func sendDiscordNotification(message string) {
-	content := message + "\n\nNote: Project - Dataset - Table - Status - Reason"
-	if len(tagIDs) > 0 {
-		tags := make([]string, len(tagIDs))
-		for i, id := range tagIDs {
-			tags[i] = fmt.Sprintf("<@%s>", id)
-		}
-		tagMessage := strings.Join(tags, " ")
-		content = fmt.Sprintf("%s\n\n%s", message, tagMessage)
+func sendDiscordNotification(projectID string) {
+	if len(discordMessageBuffer) == 0 {
+		fmt.Println("No messages to send to Discord.")
+		return
 	}
+
+	message := fmt.Sprintf(time.Now().Format("2006-01-02") + "\n\n")
+	for _, line := range discordMessageBuffer {
+		message += fmt.Sprintf("%s\n", line)
+	}
+	message += fmt.Sprintf("\n\nProject : %s", projectID)
 
 	embed := map[string]interface{}{
 		"title":       "BigQuery Backup Notification",
-		"description": content,
+		"description": message,
 		"color":       16711680, // Red color
-		"footer": map[string]interface{}{
-			"text": "Note : Project - Dataset - Table - Status - Reason",
-		},
 	}
 
 	discordMessage := map[string]interface{}{
