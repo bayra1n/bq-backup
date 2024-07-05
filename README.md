@@ -60,7 +60,7 @@ sudo ./bq-backup --bucket=$GCS --retention=30
 * **`--bucket`:** Name of your GCS bucket.
 * **`--retention`:** Number of days to retain backups (default is 7).
 * **`--webhook`:** Discord webhook URL.
-* **`--tagid`:** Comma-separated list of Discord tag IDs (e.g., `@user1,@role2`).
+* **`--tagid`:** Comma-separated list of Discord tag IDs (e.g., `4123124123123,545435436111`).
 * **`--workspace`:** Google Workspace webhook URL (optional).
 
 **How it works:**
