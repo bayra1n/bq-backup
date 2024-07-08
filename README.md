@@ -17,7 +17,7 @@ This script automates the backup of BigQuery datasets to Google Cloud Storage (G
 2. **Permissions:** Ensure the account running the script has the necessary permissions in Google Cloud to access BigQuery and GCS.
 3. **Download bq-backup:**
    ```
-   curl -L -o bq-backup https://github.com/bayra1n/bq-backup/releases/download/bq-backup/bq-backup
+   curl -L -o bq-backup https://github.com/bayra1n/bq-backup/releases/download/latest/bq-backup
    ```
 
 ## Configuration
